@@ -218,10 +218,19 @@
                         flex: 0 0 auto;
                 }
 
-                .menu-illus-img {
-                        filter: saturate(0.88) contrast(1.02);
-                }
-        </style>
+        .menu-illus-img {
+            filter: saturate(0.88) contrast(1.02);
+        }
+        /* Honeypot: ẩn khỏi người dùng, bot hay điền */
+        .hp-field {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
 <body class="bg-background text-on-surface font-body-md">
@@ -637,27 +646,27 @@
                                         </div>
                                         <div
                                                 class="bg-surface p-8 md:p-12 rounded-sm shadow-sm border border-outline-variant/20">
-                                                <form class="space-y-6" action="https://formsubmit.co/nguyenlinh0378979552@gmail.com" method="POST">
+                                                <form id="contact-form" class="space-y-6 relative" action="https://formsubmit.co/nguyenlinh0378979552@gmail.com" method="POST">
                                                         <input type="hidden" name="_subject" value="Yêu cầu đặt tiệc - Ẩm Thực Diệp Thanh"/>
                                                         <input type="hidden" name="_template" value="table"/>
-                                                        <input type="hidden" name="_captcha" value="false"/>
-                                                        <input type="hidden" name="_next" value="https://vanlongit.github.io/dichvuamthuc/#contact"/>
-                                                        <input type="text" name="_honey" class="hidden" tabindex="-1" autocomplete="off"/>
+                                                        <input type="hidden" name="_blacklist" value="viagra,casino,loan,crypto,bitcoin,seo,http://,https://"/>
+                                                        <!-- Captcha FormSubmit: bật mặc định (đã bỏ _captcha=false) -->
+                                                        <label class="hp-field" aria-hidden="true">Để trống ô này<input type="text" name="_honey" tabindex="-1" autocomplete="off"/></label>
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                                 <div class="space-y-2">
                                                                         <label
                                                                                 class="text-caption font-label-md text-primary" for="contact-name">Họ
                                                                                 và Tên</label>
-                                                                        <input id="contact-name" name="Ho_va_Ten" required class="w-full bg-transparent border-b border-outline focus:border-primary focus:ring-0 transition-colors py-2 outline-none"
+                                                                        <input id="contact-name" name="Ho_va_Ten" required minlength="2" maxlength="80" class="w-full bg-transparent border-b border-outline focus:border-primary focus:ring-0 transition-colors py-2 outline-none"
                                                                                 placeholder="Nguyễn Văn A"
-                                                                                type="text"/>
+                                                                                type="text" autocomplete="name"/>
                                                                 </div>
                                                                 <div class="space-y-2">
                                                                         <label
                                                                                 class="text-caption font-label-md text-primary" for="contact-phone">Số
                                                                                 Điện Thoại</label>
-                                                                        <input id="contact-phone" name="So_dien_thoai" required class="w-full bg-transparent border-b border-outline focus:border-primary focus:ring-0 transition-colors py-2 outline-none"
-                                                                                placeholder="0935 xxx xxx" type="tel"/>
+                                                                        <input id="contact-phone" name="So_dien_thoai" required pattern="[0-9+\s\-]{9,15}" maxlength="15" class="w-full bg-transparent border-b border-outline focus:border-primary focus:ring-0 transition-colors py-2 outline-none"
+                                                                                placeholder="0935 xxx xxx" type="tel" autocomplete="tel" title="Số điện thoại 9–15 chữ số"/>
                                                                 </div>
                                                         </div>
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -691,12 +700,20 @@
                                                         <div class="space-y-2">
                                                                 <label class="text-caption font-label-md text-primary" for="contact-note">Ghi
                                                                         Chú Thêm</label>
-                                                                <textarea id="contact-note" name="Ghi_chu"
+                                                                <textarea id="contact-note" name="Ghi_chu" maxlength="500"
                                                                         class="w-full bg-transparent border-b border-outline focus:border-primary focus:ring-0 transition-colors py-2 outline-none"
                                                                         placeholder="Yêu cầu đặc biệt về thực đơn, không gian..."
                                                                         rows="3"></textarea>
                                                         </div>
-                                                        <button class="w-full bg-primary text-on-primary py-4 rounded-sm font-label-md hover:brightness-125 transition-all shadow-lg active:scale-95"
+                                                        <div id="form-success" class="hidden p-4 rounded-sm bg-primary-fixed border border-outline-variant text-primary text-sm flex items-start gap-2" role="status">
+                                                                <span class="material-symbols-outlined shrink-0 text-primary">check_circle</span>
+                                                                <p><strong>Gửi thành công!</strong> Chúng tôi đã nhận yêu cầu của bạn và sẽ liên hệ lại sớm nhất.</p>
+                                                        </div>
+                                                        <div id="form-error" class="hidden p-4 rounded-sm bg-error-container border border-error/30 text-on-error-container text-sm flex items-start gap-2" role="alert">
+                                                                <span class="material-symbols-outlined shrink-0">error</span>
+                                                                <p>Gửi không thành công. Vui lòng thử lại hoặc gọi hotline <strong>0935558529</strong>.</p>
+                                                        </div>
+                                                        <button id="contact-submit" class="w-full bg-primary text-on-primary py-4 rounded-sm font-label-md hover:brightness-125 transition-all shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                                                                 type="submit">
                                                                 Gửi Yêu Cầu Ngay
                                                         </button>
@@ -851,6 +868,55 @@
                 });
 
                 renderCategory('khaivi');
+
+                (function () {
+                        const form = document.getElementById('contact-form');
+                        if (!form) return;
+                        const loadedAt = Date.now();
+                        const btn = document.getElementById('contact-submit');
+                        const successEl = document.getElementById('form-success');
+                        const errorEl = document.getElementById('form-error');
+                        const ajaxUrl = 'https://formsubmit.co/ajax/nguyenlinh0378979552@gmail.com';
+
+                        form.addEventListener('submit', async function (e) {
+                                e.preventDefault();
+                                successEl.classList.add('hidden');
+                                errorEl.classList.add('hidden');
+
+                                const honey = form.querySelector('[name="_honey"]');
+                                if (honey && honey.value.trim() !== '') return;
+                                if (Date.now() - loadedAt < 3000) {
+                                        alert('Vui lòng kiểm tra lại thông tin trước khi gửi.');
+                                        return;
+                                }
+                                if (!form.reportValidity()) return;
+
+                                const defaultLabel = btn.textContent;
+                                btn.disabled = true;
+                                btn.textContent = 'Đang gửi...';
+
+                                try {
+                                        const res = await fetch(ajaxUrl, {
+                                                method: 'POST',
+                                                body: new FormData(form),
+                                                headers: { 'Accept': 'application/json' }
+                                        });
+                                        const data = await res.json();
+                                        if (data.success) {
+                                                form.reset();
+                                                successEl.classList.remove('hidden');
+                                                successEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                        } else {
+                                                errorEl.classList.remove('hidden');
+                                        }
+                                } catch {
+                                        errorEl.classList.remove('hidden');
+                                } finally {
+                                        btn.disabled = false;
+                                        btn.textContent = defaultLabel;
+                                }
+                        });
+                })();
         </script>
 </body>
 
